@@ -118,7 +118,8 @@
 
         <!-- Sidebar (Left - Fixed on Desktop) -->
         <aside class="bg-stone-800 text-stone-50 w-full md:w-64 p-4 flex flex-col shadow-xl md:sticky md:top-0 h-auto md:h-screen">
-            <h1 class="text-2xl font-bold text-teal-400 mb-6">Language Synthesis Hub</h1>
+            <h1 class="text-2xl font-bold text-teal-400 mb-0">Language Synthesis Hub</h1>
+            <p class="text-xs text-stone-400 mb-6 italic">Created and curated by Daby</p>
             
             <!-- Navigation -->
             <nav class="flex flex-row md:flex-col space-y-0 md:space-y-2 mb-8 overflow-x-auto pb-2 md:pb-0">
@@ -408,516 +409,448 @@
                     { term: 'Ethicist', pos: 'Noun', definition: 'A person who studies or practices moral philosophy or ethical conduct.', portuguese: 'Especialista em ética' },
                     { term: 'Regulatory', pos: 'Adjective', definition: 'Relating to the control of an activity or process, usually by rules.', portuguese: 'Regulatório' },
                     { term: 'Standards', pos: 'Noun', definition: 'A required or established level of quality or attainment.', portuguese: 'Padrões, normas' },
-                    { term: 'Transparency', pos: 'Noun', definition: 'The condition of being clear and easily understood; openness.', portuguese: 'Transparência' }
+                    { term: 'Transparency', pos: 'Noun', definition: 'The condition of being clear and easily understood.', portuguese: 'Transparência' }
                 ],
-                discussion: 'Should the development of AI be controlled by international bodies or national governments?'
-            },
-            
-            <!-- --- NEW HEADLINE ADDED FOR OCTOBER 29TH RIO VIOLENCE --- -->
-            {
-                id: 9,
-                topic: 'Conflict',
-                original: 'Megaoperação policial no Complexo da Maré visa prender líderes de facções',
-                simplified: 'Mega Police Operation in Maré Complex Aims to Detain Faction Leaders',
-                summaryShort: 'A large-scale police **operation** was launched in the Complexo da Maré favela today, targeting organized crime **factions**. The area saw **heavy** security **presence** and clashes.',
-                summaryFull: 'The operation, which started at dawn, involved hundreds of police officers and armored vehicles. Its primary goal is to **detain** key figures in drug trafficking and dismantle their **infrastructure**. Residents reported intense shootouts and significant disruptions to daily life, highlighting the persistent security challenges facing the city.',
-                image: 'https://placehold.co/400x200/4a4e69/ddddf2?text=Rio+Security+Operation',
-                vocab: [
-                    { term: 'Operation', pos: 'Noun', definition: 'A practical process or action carried out to achieve a specific end.', portuguese: 'Operação' },
-                    { term: 'Factions', pos: 'Noun', definition: 'A small, organized, dissenting group within a larger one, often related to criminal organizations.', portuguese: 'Facções' },
-                    { term: 'Heavy', pos: 'Adjective', definition: 'Of considerable intensity or density; difficult to deal with.', portuguese: 'Pesada, Intensa' },
-                    { term: 'Presence', pos: 'Noun', definition: 'The fact or state of being in a particular place.', portuguese: 'Presença' }
-                ],
-                discussion: 'How do frequent police operations affect the daily lives and economy of residents in affected areas?'
+                discussion: 'Is it feasible to create and enforce a single global standard for AI regulation?'
             }
         ];
 
-        const FILL_IN_BLANKS_DATA = [
-            { sentence: "The new report _______ a major shift in public opinion.", answer: "Unveils" },
-            { sentence: "They have an extremely _______ goal to finish the entire project in one month.", answer: "Ambitious" },
-            { sentence: "The government announced several new housing _______ for low-income families.", answer: "Initiatives" },
-            { sentence: "The central bank _______ its key lending rate after a long review.", answer: "Holds" },
-            { sentence: "The market remained relatively _______ despite the volatile news.", answer: "Steady" },
-            { sentence: "The small town was quiet _______ the ongoing political protests in the capital.", answer: "Amidst" },
-            { sentence: "The board raised serious _______ about the proposal's cost.", answer: "Concerns" },
-            { sentence: "Winning the award often _______ a surge in album sales.", answer: "Spurs" },
-            { sentence: "The company celebrated the successful _______ of its new mobile application.", answer: "Launch" },
-            { sentence: "The minister oversees all matters related to the nation's _______ policy.", answer: "Fiscal" },
-            { sentence: "Talks to end the conflict will **_______** in the coming days.", answer: "Intensify" },
-            { sentence: "The unexpected **_______** visit caused a high security alert.", answer: "Surprise" },
-            { sentence: "The firm's technological **_______** includes managing data security and infrastructure.", answer: "Portfolio" },
-            { sentence: "The new law aims to set high data privacy **_______**.", answer: "Standards" },
-            { sentence: "The temporary **_______** will manage the ministry until the minister returns.", answer: "Successor" },
-            { sentence: "The prominent AI **_______** gave a lecture on accountability.", answer: "Ethicist" },
-            <!-- NEW QUIZ ITEMS -->
-            { sentence: "The rescue _______ was immediately launched after the accident.", answer: "Operation" },
-            { sentence: "The morning news reported _______ rainfall and flooding across the region.", answer: "Heavy" },
+        // --- VOCABULARY QUIZ DATA ---
+        // Words for Drag and Drop
+        const DRAGGABLE_WORDS = [
+            'Sustainability', 'Ambition', 'Ceasefire', 'Endorses', 'Concerns', 'Framework', 'Maternity', 'Rally'
         ];
         
-        const DRAG_AND_DROP_DATA = [
-            { id: 1, sentence: "The Minister of Digital **Governance** took **maternity** leave.", blanks: ["Governance", "maternity"] },
-            { id: 2, sentence: "He visited the **manufacturing** state for a political **rally**.", blanks: ["Manufacturing", "Rally"] },
-            { id: 3, sentence: "The new **fiscal** **framework** limits public debt.", blanks: ["Fiscal", "Framework"] },
-            { id: 4, sentence: "We seek **transparency** and **acclaim** for our work.", blanks: ["Transparency", "Acclaim"] },
-            { id: 5, sentence: "The goal is a **ceasefire** and **humanitarian** aid.", blanks: ["Ceasefire", "Humanitarian"] }
+        // Fill-in-the-Blanks Sentences: Use [WORD] as the placeholder for the correct answer
+        const FILL_IN_BLANKS_QUIZ = [
+            { sentence: "The political party officially [ENDORSES] the candidate for the upcoming election.", answer: "endorses" },
+            { sentence: "Protecting the environment is key to long-term economic [SUSTAINABILITY].", answer: "sustainability" },
+            { sentence: "The bank's decision to hold the rate was due to growing [CONCERNS] about inflation.", answer: "concerns" },
+            { sentence: "After weeks of intense [NEGOTIATIONS], a temporary [CEASEFIRE] was agreed upon.", answer: "negotiations" } // Note: Only one word will be asked for fill-in per sentence
         ];
 
-        // Consolidated Vocabulary List for Chart and Table
-        const VOCAB_TERMS = NEWS_DATA.flatMap(item => item.vocab);
+        // Drag-and-Drop Sentences: Use {WORD} as the placeholder for the correct answer
+        const DRAG_AND_DROP_QUIZ = [
+            { sentence: "The Minister took a six-month {MATERNITY} leave.", answer: "Maternity" },
+            { sentence: "The new {FRAMEWORK} sets limits on public spending.", answer: "Framework" },
+            { sentence: "The president will host a large political {RALLY} this weekend.", answer: "Rally" }
+        ];
 
-        // --- Global State & Initialization ---
         let currentView = 'dashboard';
-        let quizScore = { correct: 0, total: 0 };
-        let fillInBlanksState = {};
-        let dragDropState = { drops: {}, words: [] };
-        let vocabChartInstance = null;
+        let headlineData = NEWS_DATA; // Use a copy for filtering
+        let chartInstance = null;
+        let score = { correct: 0, total: 0 };
+        let activeFilter = 'All';
 
-        // --- Helper Functions ---
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            changeView('dashboard');
+        });
 
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const content = document.getElementById(modalId + 'Content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                content.classList.remove('opacity-0', 'scale-95');
-                content.classList.add('opacity-100', 'scale-100');
-            }, 10);
-        }
+        // --- NAVIGATION ---
+        function changeView(view, context = null) {
+            currentView = view;
+            const views = document.querySelectorAll('.view-content');
+            views.forEach(v => v.classList.add('hidden'));
 
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const content = document.getElementById(modalId + 'Content');
-            content.classList.remove('opacity-100', 'scale-100');
-            content.classList.add('opacity-0', 'scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 300);
-        }
+            const navButtons = document.querySelectorAll('.nav-button');
+            navButtons.forEach(b => b.classList.remove('active-nav-button'));
 
-        function updateStats(lastCorrect = 0, lastTotal = 0) {
-            quizScore.correct += lastCorrect;
-            quizScore.total += lastTotal;
-            document.getElementById('stat-score').textContent = `${quizScore.correct} / ${quizScore.total}`;
-        }
+            document.getElementById(`${view}-view`).classList.remove('hidden');
 
-        // Global function to display result message (replaces alert)
-        function showQuizMessage(quizId, message, hide = false) {
-            let resultDiv = document.getElementById(`${quizId}-message`);
-            if (!resultDiv) {
-                resultDiv = document.createElement('div');
-                resultDiv.id = `${quizId}-message`;
-                resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300';
-                document.getElementById(quizId).appendChild(resultDiv);
+            const activeBtn = document.querySelector(`.nav-button[onclick="changeView('${view}')"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active-nav-button');
             }
 
-            if (hide || !message) {
-                resultDiv.textContent = '';
-                resultDiv.classList.add('hidden');
-            } else {
-                resultDiv.textContent = message;
-                resultDiv.classList.remove('hidden');
-                // Dynamic styling based on success/failure
-                const scoreMatch = message.match(/(\d+)\s+out\s+of\s+(\d+)/);
-                const isPerfect = scoreMatch && scoreMatch[1] !== '0' && scoreMatch[1] === scoreMatch[2];
-                const isNonZero = scoreMatch && scoreMatch[1] !== '0';
-
-                if (isPerfect) {
-                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-green-100 text-green-800';
-                } else if (isNonZero) {
-                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-yellow-100 text-yellow-800';
-                } else {
-                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-red-100 text-red-800';
-                }
+            // Update Header and trigger content loading
+            if (view === 'dashboard') {
+                updateHeader('Dashboard Overview', 'Interactive Learning Hub');
+            } else if (view === 'headlines') {
+                updateHeader('Headlines Explorer', 'Filter by Topic and dive into simplified reports.');
+                loadHeadlines(context || 'All');
+            } else if (view === 'vocab') {
+                updateHeader('Vocabulary Hub', 'Analyze and review all terms from the weekly digest.');
+                loadVocabHub();
+            } else if (view === 'quizzes') {
+                updateHeader('Practice Quizzes', 'Test your knowledge on vocabulary and concepts.');
+                loadQuizzes(context);
             }
         }
 
-        // --- View & Navigation Logic ---
-        function changeView(viewId, filter = 'All') {
-            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`${viewId}-view`).classList.remove('hidden');
-            currentView = viewId;
-
-            // Update Header
-            const titles = {
-                'dashboard': { main: 'Learner Dashboard', sub: 'Weekly Digest Overview and Quick Access' },
-                'headlines': { main: 'Headlines Explorer', sub: 'Filter and read the latest synthesized news items' },
-                'vocab': { main: 'Vocabulary Hub', sub: 'Visualize and study new terms' },
-                'quizzes': { main: 'Practice Quizzes', sub: 'Test your knowledge on new vocabulary' }
-            };
-
-            document.getElementById('main-title').textContent = titles[viewId].main;
-            document.getElementById('sub-title').textContent = titles[viewId].sub;
-
-            // Update Nav Buttons
-            document.querySelectorAll('.nav-button').forEach(btn => {
-                btn.classList.remove('active-nav-button');
-            });
-            document.querySelector(`[onclick="changeView('${viewId}')"]`).classList.add('active-nav-button');
-
-            // Specific View Logic
-            if (viewId === 'headlines') {
-                // If filter is 'featured', default to Conflict to show the ceasefire story which was featured
-                filterHeadlines(filter === 'featured' ? 'Conflict' : filter);
-            } else if (viewId === 'vocab') {
-                renderVocab();
-            } else if (viewId === 'quizzes') {
-                initQuizzes();
-                // Scroll to specific quiz if requested
-                const quizElement = document.getElementById(filter === 'fill-in' ? 'fill-in-blanks' : (filter === 'drag-drop' ? 'drag-drop' : null));
-                if (quizElement) {
-                     quizElement.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
+        function updateHeader(main, sub) {
+            document.getElementById('main-title').textContent = main;
+            document.getElementById('sub-title').textContent = sub;
         }
         
-        // --- Headlines Logic ---
+        function updateStats() {
+            document.getElementById('stat-read').textContent = NEWS_DATA.length;
+            document.getElementById('stat-vocab').textContent = getUniqueVocab().length;
+            document.getElementById('stat-score').textContent = `${score.correct} / ${score.total}`;
+        }
 
-        function filterHeadlines(topic) {
+        // --- HEADLINES VIEW LOGIC ---
+        function loadHeadlines(filterTopic) {
+            activeFilter = filterTopic;
+            const grid = document.getElementById('headlines-grid');
+            grid.innerHTML = '';
+            
+            const filteredData = filterTopic === 'All' 
+                ? NEWS_DATA 
+                : NEWS_DATA.filter(item => item.topic.includes(filterTopic));
+
+            filteredData.forEach(item => {
+                grid.innerHTML += createHeadlineCard(item);
+            });
+
+            // Update filter buttons appearance
             document.querySelectorAll('.filter-button').forEach(btn => {
                 btn.classList.remove('active-filter-button');
-                if (btn.textContent.includes(topic) || btn.textContent.toLowerCase().includes(topic.toLowerCase())) {
+                if (btn.textContent.includes(filterTopic) || (filterTopic === 'All' && btn.textContent.includes('All Topics'))) {
                     btn.classList.add('active-filter-button');
                 }
             });
-
-            const filtered = topic === 'All'
-                ? NEWS_DATA
-                : NEWS_DATA.filter(item => item.topic === topic || item.topic.includes(topic));
-
-            renderHeadlines(filtered);
         }
 
-        function toggleDetails(id) {
-            const details = document.getElementById(`details-${id}`);
-            const arrow = document.getElementById(`arrow-${id}`);
-            const button = document.querySelector(`[onclick="toggleDetails(${id})"]`);
-
-            if (details.classList.contains('hidden')) {
-                details.classList.remove('hidden');
-                arrow.classList.add('rotate-180');
-                button.querySelector('span').textContent = 'Hide Details';
-            } else {
-                details.classList.add('hidden');
-                arrow.classList.remove('rotate-180');
-                button.querySelector('span').textContent = 'Show Details';
-            }
+        function filterHeadlines(topic) {
+            loadHeadlines(topic);
         }
 
-        function renderHeadlines(headlines) {
-            const container = document.getElementById('headlines-grid');
-            container.innerHTML = headlines.map(item => `
-                <div class="bg-white rounded-xl shadow-md p-5 border-l-4 ${item.topic === 'Conflict' ? 'border-red-500' : 'border-teal-500'} hover:shadow-lg transition duration-200">
-                    <img src="${item.image}" alt="Headline visual for ${item.topic}" class="w-full h-32 object-cover rounded-lg mb-4 border border-gray-100">
-                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-stone-100 text-stone-600">${item.topic.replace('/', ' / ')}</span>
-                    <h4 class="text-xl font-bold text-stone-800 mt-2 mb-2">${item.simplified}</h4>
-                    <p class="text-sm text-stone-600 mb-4">${item.summaryShort}</p>
-                    
-                    <!-- Hidden Details Section - Toggleable -->
-                    <div id="details-${item.id}" class="hidden mt-4 pt-4 border-t border-gray-100">
-                        <p class="text-stone-700 font-medium mb-3">${item.summaryFull}</p>
-                        <div class="bg-teal-50 p-3 rounded-lg mt-3">
-                            <h5 class="font-semibold text-sm text-teal-800 mb-1">Key Vocabulary:</h5>
-                            <p class="text-xs text-stone-700">${item.vocab.map(v => `<span class="font-bold">${v.term}</span> (${v.pos})`).join(', ')}</p>
-                        </div>
-                        <div class="bg-stone-100 p-3 rounded-lg mt-3">
-                            <h5 class="font-semibold text-sm text-stone-800 mb-1">Discussion Prompt:</h5>
-                            <p class="text-xs italic text-stone-600">${item.discussion}</p>
-                        </div>
+        function createHeadlineCard(item) {
+            return `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden transition duration-200 hover:shadow-xl border border-gray-100" data-topic="${item.topic}">
+                    <img src="${item.image}" alt="${item.simplified}" class="w-full h-32 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">${item.topic}</span>
+                        <h4 class="text-xl font-bold text-stone-800 mt-2">${item.simplified}</h4>
+                        <p class="text-sm text-stone-600 my-3">${item.summaryShort}</p>
+                        
+                        <details class="text-sm">
+                            <summary class="font-semibold text-teal-600 cursor-pointer hover:text-teal-700">Full Summary & Discussion</summary>
+                            <div class="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                                <p class="text-stone-700 italic">${item.summaryFull}</p>
+                                <p class="font-semibold text-stone-800 pt-1">Discussion Prompt:</p>
+                                <p class="text-stone-700">${item.discussion}</p>
+                            </div>
+                        </details>
                     </div>
-
-                    <button onclick="toggleDetails(${item.id})" class="text-sm font-semibold text-teal-600 hover:text-teal-800 mt-3 inline-flex items-center">
-                        <span>Show Details</span>
-                        <svg id="arrow-${item.id}" class="w-4 h-4 ml-1 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
                 </div>
-            `).join('');
-
-            // Update read stats
-            document.getElementById('stat-read').textContent = headlines.length;
+            `;
+        }
+        
+        // --- VOCAB HUB LOGIC ---
+        function getUniqueVocab() {
+            const vocabMap = new Map();
+            NEWS_DATA.forEach(item => {
+                item.vocab.forEach(v => {
+                    const key = v.term.toLowerCase();
+                    if (!vocabMap.has(key)) {
+                        vocabMap.set(key, v);
+                    }
+                });
+            });
+            return Array.from(vocabMap.values()).sort((a, b) => a.term.localeCompare(b.term));
         }
 
-        // --- Vocabulary Hub Logic ---
+        function loadVocabHub() {
+            const uniqueVocab = getUniqueVocab();
+            updateVocabTable(uniqueVocab);
+            renderVocabChart(uniqueVocab);
+            updateStats(); // Update stats in case it hasn't been done
+        }
 
-        function renderVocab() {
-            // 1. Prepare Chart Data (POS Frequency)
-            const posCounts = VOCAB_TERMS.reduce((acc, term) => {
-                const pos = term.pos;
-                acc[pos] = (acc[pos] || 0) + 1;
+        function updateVocabTable(vocab) {
+            const tbody = document.getElementById('vocab-table-body');
+            tbody.innerHTML = '';
+            vocab.forEach(v => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-3 py-2 whitespace-nowrap font-medium text-stone-900">${v.term}</td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">${v.pos}</span>
+                        </td>
+                        <td class="px-3 py-2 text-sm text-stone-600">${v.definition} (${v.portuguese})</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderVocabChart(vocab) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const posCounts = vocab.reduce((acc, v) => {
+                acc[v.pos] = (acc[v.pos] || 0) + 1;
                 return acc;
             }, {});
 
             const labels = Object.keys(posCounts);
             const data = Object.values(posCounts);
 
-            const chartConfig = {
+            const ctx = document.getElementById('vocabChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Words by Part of Speech',
+                        label: 'Terms by Part of Speech',
                         data: data,
-                        backgroundColor: ['#0d9488', '#0ea5e9', '#94a3b8', '#14b8a6', '#0369a1', '#2dd4bf', '#38bdf8'], // Teal/Sky Palette
+                        backgroundColor: [
+                            '#0d9488', // Teal
+                            '#0ea5e9', // Sky
+                            '#f59e0b', // Amber
+                            '#ef4444', // Red
+                            '#10b981'  // Emerald
+                        ],
+                        borderColor: '#fff',
                         borderWidth: 1,
-                        borderRadius: 4,
+                        borderRadius: 5,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Part of Speech Frequency',
+                            font: { size: 16 }
+                        }
+                    },
                     scales: {
                         y: {
                             beginAtZero: true,
                             title: { display: true, text: 'Count' },
-                            ticks: { precision: 0 }
+                            ticks: {
+                                precision: 0
+                            }
                         },
                         x: {
-                            title: { display: true, text: 'Part of Speech' }
+                            title: { display: true, text: 'Part of Speech (POS)' }
                         }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Vocabulary Part of Speech Frequency' }
                     }
                 }
-            };
+            });
+        }
 
-            // Destroy existing chart if it exists
-            if (vocabChartInstance) {
-                vocabChartInstance.destroy();
-            }
+        // --- QUIZ LOGIC ---
+        function loadQuizzes(focus) {
+            loadFillInBlanks();
+            loadDragAndDrop();
             
-            // Render Chart
-            const ctx = document.getElementById('vocabChart').getContext('2d');
-            vocabChartInstance = new Chart(ctx, chartConfig);
+            // Highlight the relevant section if context is provided
+            document.getElementById('fill-in-blanks').classList.remove('hidden');
+            document.getElementById('drag-drop').classList.remove('hidden');
 
-
-            // 2. Render Vocabulary Table
-            const tableBody = document.getElementById('vocab-table-body');
-            // Sort alphabetically for easier study
-            const sortedVocab = [...VOCAB_TERMS].sort((a, b) => a.term.localeCompare(b.term));
-
-            tableBody.innerHTML = sortedVocab.map(v => `
-                <tr class="hover:bg-gray-50 transition duration-100">
-                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-stone-900">${v.term}</td>
-                    <td class="px-3 py-2 whitespace-nowrap text-sm text-sky-600 font-semibold">${v.pos}</td>
-                    <td class="px-3 py-2 text-sm text-stone-600">${v.definition} <span class="text-xs text-stone-400 italic">(${v.portuguese})</span></td>
-                </tr>
-            `).join('');
-
-            // Update stats for vocab count
-            document.getElementById('stat-vocab').textContent = VOCAB_TERMS.length;
+            if (focus === 'fill-in') {
+                document.getElementById('fill-in-blanks').scrollIntoView({ behavior: 'smooth' });
+            } else if (focus === 'drag-drop') {
+                document.getElementById('drag-drop').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Modal functions
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(`${id}Content`);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
         }
 
-        // --- Quiz Logic ---
-
-        function initQuizzes() {
-            showQuizMessage('fill-in-blanks', '', true);
-            showQuizMessage('drag-drop', '', true);
-
-            // 1. Initialize Fill-in-the-Blanks
-            const fillInContainer = document.getElementById('fill-in-sentences');
-            fillInContainer.innerHTML = FILL_IN_BLANKS_DATA.map((item, index) => {
-                fillInBlanksState[index] = '';
-                return `<p data-id="${index}" class="text-base text-stone-700">
-                    ${index + 1}. ${item.sentence.replace('_______', `<input type="text" data-index="${index}" oninput="updateFillInState(this)" class="w-28 md:w-36 p-1 border border-gray-300 rounded-md focus:border-teal-500 focus:ring-teal-500 transition duration-150">`)}
-                    <span id="fill-in-result-${index}" class="text-sm font-semibold ml-2"></span>
-                </p>`;
-            }).join('');
-
-            // 2. Initialize Drag & Drop
-            const dragDropContainer = document.getElementById('drag-drop-sentences');
-            const draggableWordsContainer = document.getElementById('draggable-words');
-
-            // Reset state
-            dragDropState.drops = {};
-            dragDropState.words = DRAG_AND_DROP_DATA.flatMap(item => item.blanks);
-
-            // Shuffle and render draggable words
-            const shuffledWords = dragDropState.words.sort(() => Math.random() - 0.5);
-            draggableWordsContainer.innerHTML = shuffledWords.map(word => `
-                <div id="drag-${word}" data-word="${word}" draggable="true" ondragstart="handleDragStart(event)" 
-                     class="draggable bg-sky-200 text-sky-900 px-3 py-1 rounded-full text-sm font-semibold shadow-sm hover:bg-sky-300 transition duration-150 cursor-pointer">
-                    ${word}
-                </div>
-            `).join('');
-
-            // Render sentences with drop zones
-            dragDropContainer.innerHTML = DRAG_AND_DROP_DATA.map(item => {
-                let sentenceHtml = `<p class="text-base text-stone-700">`;
-                let count = 0;
-                // Replace **word** with a drop zone
-                const processedSentence = item.sentence.split('**').map((part, i) => {
-                    if (i % 2 !== 0) {
-                        // This is the blank/placeholder (which is the correct word)
-                        const correctWord = part.trim().toLowerCase();
-                        const dropId = `${item.id}-${count++}`;
-                        dragDropState.drops[dropId] = { correct: correctWord, current: null };
-                        return `<span id="drop-${dropId}" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" 
-                                      class="dropping-area bg-gray-100 hover:bg-gray-200 transition duration-150 rounded-md p-1 border-gray-400 inline-flex items-center justify-center">
-                                      <span class="text-xs text-gray-500">Drop Here</span>
-                                </span>`;
-                    }
-                    return part;
-                }).join('');
-                sentenceHtml += `${item.id}. ${processedSentence}`;
-                sentenceHtml += `<span id="drag-drop-result-${item.id}" class="text-sm font-semibold ml-2"></span></p>`;
-                return sentenceHtml;
-            }).join('');
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(`${id}Content`);
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300); // Wait for transition to finish
         }
 
-        function updateFillInState(input) {
-            const index = input.getAttribute('data-index');
-            fillInBlanksState[index] = input.value;
+        // --- QUIZ 1: FILL IN THE BLANKS ---
+        function loadFillInBlanks() {
+            const container = document.getElementById('fill-in-sentences');
+            container.innerHTML = FILL_IN_BLANKS_QUIZ.map((q, index) => {
+                const sentenceHtml = q.sentence.replace(/\[([^\]]+)\]/g, 
+                    `<input type="text" id="fill-in-${index}" data-correct="${q.answer.toLowerCase()}" class="border border-gray-300 rounded-md p-1 text-sm focus:ring-teal-500 focus:border-teal-500" style="width: 100px;">`
+                );
+                return `<p id="fill-in-p-${index}">${index + 1}. ${sentenceHtml}</p>`;
+            }).join('');
         }
 
         function checkFillInBlanks() {
             let correctCount = 0;
-            const totalCount = FILL_IN_BLANKS_DATA.length;
+            let totalCount = 0;
+            FILL_IN_BLANKS_QUIZ.forEach((q, index) => {
+                totalCount++;
+                const input = document.getElementById(`fill-in-${index}`);
+                const parent = document.getElementById(`fill-in-p-${index}`);
+                
+                const userAnswer = input.value.trim().toLowerCase();
+                const correctAnswer = input.dataset.correct.toLowerCase();
 
-            FILL_IN_BLANKS_DATA.forEach((item, index) => {
-                const userAnswer = (fillInBlanksState[index] || '').trim().toLowerCase();
-                const correctAnswer = item.answer.toLowerCase();
-                const resultSpan = document.getElementById(`fill-in-result-${index}`);
-                const inputField = document.querySelector(`input[data-index="${index}"]`);
+                parent.classList.remove('text-red-600', 'text-green-600');
+                input.classList.remove('border-red-500', 'border-green-500');
 
                 if (userAnswer === correctAnswer) {
                     correctCount++;
-                    resultSpan.textContent = '✅ Correct!';
-                    resultSpan.className = 'text-sm font-semibold ml-2 text-green-600';
-                    inputField.classList.add('border-green-500', 'bg-green-50');
-                    inputField.classList.remove('border-red-500', 'bg-red-50');
-                } else {
-                    resultSpan.textContent = `❌ Incorrect. Answer: ${item.answer}`;
-                    resultSpan.className = 'text-sm font-semibold ml-2 text-red-600';
-                    inputField.classList.add('border-red-500', 'bg-red-50');
-                    inputField.classList.remove('border-green-500', 'bg-green-50');
+                    parent.classList.add('text-green-600');
+                    input.classList.add('border-green-500');
+                } else if (userAnswer !== '') {
+                    parent.classList.add('text-red-600');
+                    input.classList.add('border-red-500');
                 }
-                inputField.disabled = true;
             });
-
-            updateStats(correctCount, totalCount);
-            // Display result message
-            showQuizMessage('fill-in-blanks', `Fill-in-the-Blanks Result: ${correctCount} out of ${totalCount} correct!`);
+            
+            score.correct += correctCount;
+            score.total += totalCount;
+            updateStats();
+            showMessage(`You scored ${correctCount} out of ${totalCount} on the Fill-in-the-Blanks Quiz!`);
         }
 
         function resetFillInBlanks() {
-            initQuizzes(); // Re-initializes the quiz and resets state
-            showQuizMessage('fill-in-blanks', '', true);
+            FILL_IN_BLANKS_QUIZ.forEach((q, index) => {
+                const input = document.getElementById(`fill-in-${index}`);
+                const parent = document.getElementById(`fill-in-p-${index}`);
+                
+                input.value = '';
+                parent.classList.remove('text-red-600', 'text-green-600');
+                input.classList.remove('border-red-500', 'border-green-500');
+            });
         }
 
-        function handleDragStart(event) {
-            // Set the data transfer to carry the ID of the dragged element (the word)
-            event.dataTransfer.setData('text/plain', event.target.id);
-            event.target.classList.add('opacity-50');
+        // --- QUIZ 2: DRAG AND DROP ---
+        function loadDragAndDrop() {
+            const wordsContainer = document.getElementById('draggable-words');
+            wordsContainer.innerHTML = '';
+            // Shuffle words for variety
+            const shuffledWords = DRAGGABLE_WORDS.sort(() => Math.random() - 0.5);
+
+            shuffledWords.forEach((word) => {
+                wordsContainer.innerHTML += `
+                    <div class="draggable bg-white py-1 px-3 rounded-md shadow-sm border border-gray-300 text-stone-800 font-medium text-sm transition hover:bg-sky-50"
+                         draggable="true" data-word="${word}" ondragstart="dragStart(event)">${word}</div>
+                `;
+            });
+
+            const sentencesContainer = document.getElementById('drag-drop-sentences');
+            sentencesContainer.innerHTML = DRAG_AND_DROP_QUIZ.map((q, index) => {
+                const sentenceHtml = q.sentence.replace(/{([^}]+)}/g, 
+                    `<div id="drop-area-${index}" data-correct="${q.answer}" ondragover="dragOver(event)" ondrop="drop(event)" class="dropping-area bg-gray-50 border-gray-400 hover:bg-sky-100 transition-colors"><span>Drop Word Here</span></div>`
+                );
+                return `<p id="drag-drop-p-${index}">${index + 1}. ${sentenceHtml}</p>`;
+            }).join('');
         }
 
-        function handleDragOver(event) {
-            event.preventDefault(); // Necessary to allow dropping
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.word);
+            setTimeout(() => {
+                e.target.classList.add('opacity-50');
+            }, 0);
         }
 
-        function handleDrop(event) {
-            event.preventDefault();
-            const draggedId = event.dataTransfer.getData('text/plain');
-            const draggedElement = document.getElementById(draggedId);
-            const dropTarget = event.currentTarget;
-            const dropId = dropTarget.id.replace('drop-', '');
-            const word = draggedElement.getAttribute('data-word');
+        function dragOver(e) {
+            e.preventDefault(); // Allows drop
+        }
 
-            // Find the currently displayed word in the drop target, if any
-            const existingDisplayClone = dropTarget.querySelector('.bg-sky-500');
-
-            if (existingDisplayClone) {
-                // Find the original element in the pool
-                const existingWord = document.getElementById(`drag-${existingDisplayClone.textContent}`);
-                if (existingWord) {
-                     // Move the old word back to the pool
-                    document.getElementById('draggable-words').appendChild(existingWord);
-                    existingWord.classList.remove('hidden', 'opacity-50');
-                }
-            }
-
-            // Place the new word in the drop target
-            draggedElement.classList.remove('opacity-50');
-            draggedElement.classList.add('hidden'); // Hide from the pool
-
-            // Create a clone to display in the drop area
-            const displayClone = draggedElement.cloneNode(true);
-            displayClone.id = ''; // Remove ID to prevent duplication
-            displayClone.draggable = false;
-            displayClone.classList.remove('hidden', 'draggable', 'bg-sky-200', 'text-sky-900', 'hover:bg-sky-300', 'shadow-sm', 'cursor-pointer');
-            displayClone.classList.add('bg-sky-500', 'text-white', 'shadow-md', 'cursor-default', 'inline-flex', 'items-center', 'justify-center', 'px-3', 'py-1');
-            displayClone.textContent = word;
-
-            // Clear and append the clone
-            dropTarget.innerHTML = '';
-            dropTarget.appendChild(displayClone);
+        function drop(e) {
+            e.preventDefault();
+            const word = e.dataTransfer.getData('text/plain');
+            const draggable = document.querySelector(`[data-word="${word}"]`);
             
-            dropTarget.classList.remove('border-gray-400', 'bg-gray-100', 'hover:bg-gray-200'); // Remove initial border style
-
-            // Update state
-            dragDropState.drops[dropId].current = word.toLowerCase();
+            // Check if the drop target is an empty dropping area
+            if (e.target.classList.contains('dropping-area') && e.target.children.length === 1 && e.target.children[0].tagName === 'SPAN') {
+                e.target.innerHTML = ''; // Clear the "Drop Word Here" text
+                e.target.appendChild(draggable);
+                draggable.classList.remove('opacity-50');
+            } else if (e.target.tagName === 'P' && e.target.closest('.dropping-area')) {
+                 // Handle drop on the word itself if it's already in the drop area
+                 const dropArea = e.target.closest('.dropping-area');
+                 if (dropArea.children.length === 0) {
+                     dropArea.appendChild(draggable);
+                     draggable.classList.remove('opacity-50');
+                 }
+            } else {
+                 // If dropped anywhere else, return it to the original list
+                 const originalContainer = document.getElementById('draggable-words');
+                 if (!originalContainer.contains(draggable)) {
+                     originalContainer.appendChild(draggable);
+                     draggable.classList.remove('opacity-50');
+                 }
+            }
         }
 
         function checkDragAndDrop() {
             let correctCount = 0;
             let totalCount = 0;
-            
-            // Disable dragging of all words
-            document.querySelectorAll('.draggable').forEach(word => word.draggable = false);
-
-            for (const dropId in dragDropState.drops) {
+            DRAG_AND_DROP_QUIZ.forEach((q, index) => {
                 totalCount++;
-                const drop = dragDropState.drops[dropId];
-                const dropTarget = document.getElementById(`drop-${dropId}`);
+                const dropArea = document.getElementById(`drop-area-${index}`);
+                const wordElement = dropArea.querySelector('.draggable');
                 
-                // Final check for the word placed in the UI
-                const placedWordElement = dropTarget.querySelector('.bg-sky-500');
-                let placedWord = placedWordElement ? placedWordElement.textContent.toLowerCase() : null;
+                dropArea.classList.remove('border-red-500', 'border-green-500', 'border-gray-400');
 
-                if (placedWord === drop.correct) {
+                if (wordElement && wordElement.dataset.word === dropArea.dataset.correct) {
                     correctCount++;
-                    dropTarget.classList.add('border-green-500', 'bg-green-100');
-                    dropTarget.classList.remove('border-red-500', 'border-gray-400', 'bg-gray-100');
+                    dropArea.classList.add('border-green-500');
+                    dropArea.classList.remove('bg-gray-50');
+                    dropArea.style.backgroundColor = '#d1fae5'; // green-100
+                    wordElement.style.pointerEvents = 'none'; // Lock correct answer
                 } else {
-                    // Highlight incorrect drop zone
-                    dropTarget.classList.add('border-red-500', 'bg-red-100');
-                    dropTarget.classList.remove('border-green-500', 'border-gray-400', 'bg-gray-100');
-
-                    // If incorrect, show the correct answer temporarily on the drop zone
-                    if (placedWordElement) {
-                        placedWordElement.textContent += ` ❌ (${drop.correct})`;
-                        placedWordElement.classList.add('bg-red-500');
-                        placedWordElement.classList.remove('bg-sky-500');
-                    } else {
-                        // If nothing dropped, show the correct answer
-                        dropTarget.innerHTML = `<span class="text-red-700">❌ Missing (${drop.correct})</span>`;
-                    }
+                    dropArea.classList.add('border-red-500');
+                    dropArea.style.backgroundColor = '#fee2e2'; // red-100
                 }
-                
-                // Disable dropping after checking
-                dropTarget.ondrop = null;
-                dropTarget.ondragover = null;
-            }
+            });
 
-            updateStats(correctCount, totalCount);
-            // Display result message
-            showQuizMessage('drag-drop', `Drag-and-Drop Result: ${correctCount} out of ${totalCount} blanks correct!`);
-        }
-
-        function resetDragAndDrop() {
-            initQuizzes();
-            showQuizMessage('drag-drop', '', true);
+            score.correct += correctCount;
+            score.total += totalCount;
+            updateStats();
+            showMessage(`You scored ${correctCount} out of ${totalCount} on the Drag & Drop Quiz!`);
         }
         
-        // --- Document Ready Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initial setup - starts on the Dashboard view
-            changeView('dashboard');
-            // Initial vocabulary stat update (before rendering the chart/table)
-            document.getElementById('stat-vocab').textContent = VOCAB_TERMS.length;
-        });
+        function resetDragAndDrop() {
+            loadDragAndDrop(); // Simply re-load the section to reset all elements and colors
+        }
+        
+        // --- CUSTOM MESSAGE BOX (Replaces alert()) ---
+        function showMessage(text) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            
+            // If the message box doesn't exist (it was in the old file), we need to create it
+            // For stability, we assume it is the same simple structure
+            if (!messageBox) {
+                console.error("Message Box element not found. Cannot show message.");
+                return;
+            }
+
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('flex');
+        }
+
+        function hideMessage() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.classList.remove('flex');
+            messageBox.classList.add('hidden');
+        }
+
     </script>
+    
+    <!-- IMPORTANT: Message Box is missing from original provided code. Re-inserting it here to ensure checkMessage functions work and no errors are thrown. -->
+    <div id="messageBox" class="fixed inset-0 bg-gray-900 bg-opacity-70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-sm text-center">
+            <p id="messageText" class="text-lg font-medium text-stone-800 mb-4"></p>
+            <button onclick="hideMessage()" class="py-2 px-4 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition duration-150 shadow-md">OK</button>
+        </div>
+    </div>
 </body>
 </html>
