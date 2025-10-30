@@ -1,0 +1,923 @@
+<!-- Chosen Palette: Warm Neutrals & Teal/Sky Accents (Stone-50 background, Teal/Sky for interactivity and data visualization) -->
+<!-- Application Structure Plan: The structure is a dashboard approach with a fixed left sidebar for navigation and quick stats, and a large main content area that dynamically switches views (Dashboard, Headlines, Vocab Hub, Quizzes). This approach was chosen because the source content is modular (news items, vocab, grammar, quizzes) and requires non-linear access, which a dashboard facilitates far better than a linear report structure. Key interactions include navigation filtering (by topic) and dynamic chart updates (vocab visualization). -->
+<!-- Visualization & Content Choices: Summary: News Topics -> Goal: Organization -> Viz/Presentation Method: Filterable Card Grid -> Interaction: Topic Filter Buttons -> Justification: Allows learners to focus reading by interest/difficulty. Library/Method: HTML/Tailwind/Vanilla JS. Summary: Vocabulary Terms -> Goal: Inform/Organize -> Viz/Presentation Method: Part of Speech Frequency Bar Chart -> Interaction: Hover to see counts -> Justification: Provides quantitative insight into the structure of the learned vocabulary. Library/Method: Chart.js/Canvas. Summary: Grammar Focus -> Goal: Inform -> Viz/Presentation Method: Explainer Modal -> Interaction: Click 'View Grammar' -> Justification: Avoids screen clutter while providing detailed, focused instruction. Library/Method: HTML/Vanilla JS. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Synthesis Hub - Interactive Learning Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Required Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px; /* Max height */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .scroll-y { overflow-y: auto; }
+        .draggable { cursor: grab; }
+        .dropping-area { min-width: 80px; min-height: 30px; border-bottom: 2px dashed #94a3b8; margin: 0 5px; display: inline-block; vertical-align: bottom; }
+        /* Custom scrollbar for aesthetic purposes */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f8f8f8; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Custom styling for buttons and filters */
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            background-color: #44403c; /* stone-800 -> stone-700 fallback */
+            color: #d6d3d1; /* stone-300 */
+        }
+        .nav-button:hover {
+            background-color: #57534e; /* stone-600 */
+            color: #f5f5f4; /* stone-100 */
+        }
+        .active-nav-button {
+            background-color: #0d9488; /* teal-600 */
+            color: #ffffff;
+        }
+        .active-nav-button:hover {
+            background-color: #0f766e; /* teal-700 */
+        }
+        .filter-button {
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            color: #4b5563;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .filter-button:hover {
+            background-color: #e5e7eb;
+        }
+        .active-filter-button {
+            border-color: #0ea5e9; /* sky-500 */
+            background-color: #e0f2f7; /* sky-100 */
+            color: #0369a1; /* sky-800 */
+            font-weight: 700;
+        }
+        .active-filter-button:hover {
+            background-color: #bae6fd; /* sky-200 */
+        }
+        /* Style for the inline drop area text */
+        .dropping-area > span {
+            display: block; /* Make the text take up the span area */
+            line-height: 1.5;
+            padding: 2px 4px;
+            color: #64748b; /* stone-500 */
+            font-size: 0.75rem;
+        }
+        /* Style for the input field in the quiz to maintain flow */
+        #fill-in-sentences input {
+            vertical-align: middle;
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 min-h-screen">
+
+    <!-- Modal for Detailed Grammar Focus -->
+    <div id="grammarModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0" id="grammarModalContent">
+            <h3 class="text-2xl font-bold mb-4 text-sky-700">Grammar Focus: Passive Voice</h3>
+            <p class="text-stone-700 mb-4">The Passive Voice is used when the focus is on the action (the verb) and the result, rather than the subject performing the action. It is often used in news reporting when the agent is unknown or less important than the event itself.</p>
+            <div class="bg-sky-50 p-4 rounded-lg border border-sky-200">
+                <p class="font-semibold text-sky-800 mb-2">Example from Report:</p>
+                <ul class="list-disc list-inside text-stone-700">
+                    <li>"The meeting **was held** in Geneva." (Focus is on the meeting)</li>
+                    <li>"New medicines **are being found** by AI." (Focus is on the discovery of medicines)</li>
+                </ul>
+            </div>
+            <button onclick="closeModal('grammarModal')" class="mt-6 w-full py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition duration-150 shadow-md">Close Explanation</button>
+        </div>
+    </div>
+
+    <!-- Main Application Grid Layout -->
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Sidebar (Left - Fixed on Desktop) -->
+        <aside class="bg-stone-800 text-stone-50 w-full md:w-64 p-4 flex flex-col shadow-xl md:sticky md:top-0 h-auto md:h-screen">
+            <h1 class="text-2xl font-bold text-teal-400 mb-6">Language Synthesis Hub</h1>
+            
+            <!-- Navigation -->
+            <nav class="flex flex-row md:flex-col space-y-0 md:space-y-2 mb-8 overflow-x-auto pb-2 md:pb-0">
+                <button onclick="changeView('dashboard')" class="nav-button active-nav-button">
+                    <span class="mr-2">🏠</span> Dashboard
+                </button>
+                <button onclick="changeView('headlines')" class="nav-button">
+                    <span class="mr-2">📰</span> Headlines Explorer
+                </button>
+                <button onclick="changeView('vocab')" class="nav-button">
+                    <span class="mr-2">📊</span> Vocabulary Hub
+                </button>
+                <button onclick="changeView('quizzes')" class="nav-button">
+                    <span class="mr-2">✅</span> Practice Quizzes
+                </button>
+            </nav>
+
+            <!-- Quick Stats Widget -->
+            <div class="p-4 bg-stone-700 rounded-lg text-sm mt-auto hidden md:block">
+                <h4 class="font-semibold text-teal-400 mb-2 border-b border-stone-600 pb-1">Learning Stats</h4>
+                <div class="flex justify-between py-1"><span>News Items Read:</span><span id="stat-read" class="font-bold text-sky-300">0</span></div>
+                <div class="flex justify-between py-1"><span>Vocabulary Terms:</span><span id="stat-vocab" class="font-bold text-sky-300">0</span></div>
+                <div class="flex justify-between py-1"><span>Quiz Score:</span><span id="stat-score" class="font-bold text-sky-300">0 / 0</span></div>
+            </div>
+
+        </aside>
+
+        <!-- Main Content Area (Right - Dynamic) -->
+        <main class="flex-1 p-4 md:p-8">
+            <div class="max-w-4xl mx-auto">
+                
+                <header class="mb-8 border-b pb-4">
+                    <h2 class="text-3xl font-bold text-stone-800" id="main-title"></h2>
+                    <p class="text-sm text-stone-500" id="sub-title"></p>
+                </header>
+
+                <!-- Dynamic Content Container -->
+                <div id="content-container">
+                    <!-- Dashboard View -->
+                    <section id="dashboard-view" class="view-content">
+                        <p class="mb-6 text-stone-600">Welcome to your interactive learning platform. Use the sidebar to navigate the latest digest, explore vocabulary, or jump straight into practice exercises.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <!-- Featured Card -->
+                            <div class="col-span-1 md:col-span-2 bg-white rounded-xl shadow-lg p-6 border-t-4 border-teal-600">
+                                <h3 class="text-xl font-bold text-stone-800 mb-3">Featured Digest: Ceasefire Negotiations</h3>
+                                <p class="text-stone-600 mb-4">International negotiations have intensified this week, focusing on achieving a humanitarian ceasefire in Gaza.</p>
+                                <button onclick="changeView('headlines', 'Conflict')" class="py-2 px-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition duration-150">View Full Story</button>
+                            </div>
+                            <!-- Grammar Card -->
+                            <div class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-sky-600">
+                                <h3 class="text-xl font-bold text-stone-800 mb-3">Grammar Lab</h3>
+                                <p class="text-stone-600 mb-4">Today's focus is on the **Passive Voice**, commonly used in formal reports and news.</p>
+                                <button onclick="openModal('grammarModal')" class="py-2 px-4 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition duration-150">View Explanation</button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Quiz Links -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-stone-800 mb-3 border-b pb-2">Practice Links</h3>
+                            <div class="flex flex-wrap gap-4 mt-4">
+                                <button onclick="changeView('quizzes', 'fill-in')" class="py-2 px-4 bg-gray-100 border border-gray-300 rounded-lg text-stone-700 font-medium hover:bg-gray-200 transition duration-150 flex items-center">
+                                    <span class="mr-2">✍️</span> Fill in the Blanks
+                                </button>
+                                <button onclick="changeView('quizzes', 'drag-drop')" class="py-2 px-4 bg-gray-100 border border-gray-300 rounded-lg text-stone-700 font-medium hover:bg-gray-200 transition duration-150 flex items-center">
+                                    <span class="mr-2">👆</span> Drag & Drop
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Headlines Explorer View -->
+                    <section id="headlines-view" class="view-content hidden">
+                        <p class="mb-6 text-stone-600">Explore news items, filter by topic, and interact with summaries and learning tools. Each item contains embedded vocabulary and discussion prompts.</p>
+                        
+                        <!-- Topic Filters -->
+                        <div class="mb-6 flex flex-wrap gap-3">
+                            <button onclick="filterHeadlines('All')" class="filter-button active-filter-button">All Topics</button>
+                            <button onclick="filterHeadlines('Rio')" class="filter-button">Rio Initiatives</button>
+                            <button onclick="filterHeadlines('Economy')" class="filter-button">Economy</button>
+                            <button onclick="filterHeadlines('Culture')" class="filter-button">Culture</button>
+                            <button onclick="filterHeadlines('Policy')" class="filter-button">Policy/Law</button>
+                            <button onclick="filterHeadlines('Conflict')" class="filter-button">Conflict</button>
+                            <button onclick="filterHeadlines('US')" class="filter-button">US Politics</button>
+                        </div>
+
+                        <!-- Headlines Grid -->
+                        <div id="headlines-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Headlines Cards will be injected here -->
+                        </div>
+                    </section>
+
+                    <!-- Vocabulary Hub View -->
+                    <section id="vocab-view" class="view-content hidden">
+                        <p class="mb-6 text-stone-600">The Vocabulary Hub synthesizes all terms from the weekly digest, allowing you to quickly visualize the types of words you are learning. Check the chart below for the **Part of Speech Frequency** and the table for definitions.</p>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                            <h3 class="text-xl font-bold text-sky-700 mb-4">Vocabulary Breakdown</h3>
+                            <div class="chart-container">
+                                <canvas id="vocabChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h3 class="text-xl font-bold text-sky-700 mb-4">Master Vocabulary List</h3>
+                            <div class="scroll-y max-h-96">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">POS</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Definition</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vocab-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Vocab Table Rows will be injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Practice Quizzes View -->
+                    <section id="quizzes-view" class="view-content hidden">
+                        <p class="mb-6 text-stone-600">Test your understanding of the new vocabulary and concepts with these interactive exercises.</p>
+
+                        <!-- Fill in the Blanks Section -->
+                        <div id="fill-in-blanks" class="bg-white rounded-xl shadow-lg p-6 mb-8 border-t-4 border-teal-600">
+                            <h3 class="text-xl font-bold text-teal-700 mb-4">1. Fill in the Blanks</h3>
+                            <div id="fill-in-sentences" class="space-y-4 text-stone-700">
+                                <!-- Sentences will be injected here -->
+                            </div>
+                            <div class="flex gap-4 mt-6">
+                                <button onclick="checkFillInBlanks()" class="py-2 px-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition duration-150 shadow-md">Check Answers</button>
+                                <button onclick="resetFillInBlanks()" class="py-2 px-4 bg-gray-200 text-stone-700 rounded-lg font-semibold hover:bg-gray-300 transition duration-150">Reset</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Drag and Drop Section -->
+                        <div id="drag-drop" class="bg-white rounded-xl shadow-lg p-6 border-t-4 border-sky-600">
+                            <h3 class="text-xl font-bold text-sky-700 mb-4">2. Drag and Drop</h3>
+                            <div class="mb-6 p-3 bg-sky-50 rounded-lg">
+                                <h4 class="font-semibold mb-2 text-sky-800">Available Words: (Drag these into the blanks)</h4>
+                                <div id="draggable-words" class="flex flex-wrap gap-2">
+                                    <!-- Draggable words will be injected here -->
+                                </div>
+                            </div>
+                            <div id="drag-drop-sentences" class="space-y-4 text-stone-700">
+                                <!-- Sentences will be injected here -->
+                            </div>
+                            <div class="flex gap-4 mt-6">
+                                <button onclick="checkDragAndDrop()" class="py-2 px-4 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-700 transition duration-150 shadow-md">Check Answers</button>
+                            <button onclick="resetDragAndDrop()" class="py-2 px-4 bg-gray-200 text-stone-700 rounded-lg font-semibold hover:bg-gray-300 transition duration-150">Reset</button>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const NEWS_DATA = [
+            {
+                id: 1,
+                topic: 'Rio',
+                original: 'Prefeitura do Rio lança projeto ambicioso para despoluição da Baía de Guanabara',
+                simplified: 'Rio Mayor Unveils Ambitious Plan to Clean Guanabara Bay',
+                summaryShort: 'The Rio de Janeiro Mayor’s Office has launched a major project aimed at cleaning up the heavily polluted Guanabara Bay, focusing on sewage treatment and better waste management.',
+                summaryFull: 'The comprehensive plan, costing billions of reais, includes building new sewage treatment plants and tightening regulations on industrial dumping. Environmentalists caution that while **ambitious**, the successful implementation of these **initiatives** will take years, but the effort is viewed as **critical** for local marine life and tourism.',
+                image: 'https://placehold.co/400x200/588157/fefae0?text=Guanabara+Bay+Cleanup',
+                vocab: [
+                    { term: 'Unveils', pos: 'Verb', definition: 'To reveal or announce (a plan, idea, or product) for the first time.', portuguese: 'Revelar, lançar' },
+                    { term: 'Ambitious', pos: 'Adjective', definition: 'Having or showing a strong desire and determination to succeed.', portuguese: 'Ambicioso' },
+                    { term: 'Sewage', pos: 'Noun', definition: 'Waste water and refuse conveyed in sewers.', portuguese: 'Esgoto' },
+                    { term: 'Initiatives', pos: 'Noun', definition: 'The action of taking the first step; new plans or strategies.', portuguese: 'Iniciativas' }
+                ],
+                discussion: 'What are the biggest challenges a major city like Rio faces in cleaning up its waterways?'
+            },
+            {
+                id: 2,
+                topic: 'Economy',
+                original: 'Banco Central mantém Selic estável em 10,5% após meses de cortes',
+                simplified: 'Central Bank Holds Key Interest Rate Steady Amid Inflation Concerns',
+                summaryShort: 'Brazil’s Central Bank decided to keep its benchmark interest rate (Selic) at 10.5%. This decision marks a pause after months of successive cuts, aimed at battling persistent inflation.',
+                summaryFull: 'The move to **hold** the rate **steady** signals the bank\'s caution **amidst** global economic headwinds and domestic price pressures. Analysts suggest the pause is temporary, but express **concerns** over the impact on economic growth in the short term.',
+                image: 'https://placehold.co/400x200/3a5a40/fefae0?text=Brazil+Economy',
+                vocab: [
+                    { term: 'Holds', pos: 'Verb', definition: 'To keep something in a specified position; to maintain (a rate or policy).', portuguese: 'Manter, segurar' },
+                    { term: 'Steady', pos: 'Adjective', definition: 'Not changing or fluctuating; stable.', portuguese: 'Estável, firme' },
+                    { term: 'Amidst', pos: 'Preposition', definition: 'Surrounded by; in the middle of (often used for conditions or circumstances).', portuguese: 'Em meio a, rodeado por' },
+                    { term: 'Concerns', pos: 'Noun', definition: 'Matters of interest or worry; anxiety about something.', portuguese: 'Preocupações, questões' }
+                ],
+                discussion: 'How does an interest rate decision affect the average person who wants to buy a house or start a business?'
+            },
+            {
+                id: 3,
+                topic: 'Culture',
+                original: 'Lançamento de série sobre Bossa Nova no streaming impulsiona turismo cultural',
+                simplified: 'Bossa Nova Series Launch on Streaming Spurs Cultural Tourism',
+                summaryShort: 'A highly anticipated new drama series about the history of Bossa Nova music has launched on a global streaming platform. Experts believe the show will greatly **spur** cultural **tourism** in Rio.',
+                summaryFull: 'The series, which was filmed in iconic locations across Rio and features the music of classic artists like Tom Jobim, has received international **acclaim**. The government is planning new initiatives to capitalize on the **launch** by promoting historical music venues and beaches mentioned in the show.',
+                image: 'https://placehold.co/400x200/7f4f24/fefae0?text=Bossa+Nova+Rio',
+                vocab: [
+                    { term: 'Spurs', pos: 'Verb', definition: 'To urge or encourage (a person or activity); to prompt or stimulate.', portuguese: 'Impulsionar, estimular' },
+                    { term: 'Launch', pos: 'Noun', definition: 'The action of starting or setting in motion (a product or project).', portuguese: 'Lançamento' },
+                    { term: 'Anticipated', pos: 'Adjective', definition: 'Regarded as likely to happen; expected.', portuguese: 'Antecipado, esperado' },
+                    { term: 'Acclaim', pos: 'Noun', definition: 'Enthusiastic public praise and approval.', portuguese: 'Aclamação, reconhecimento' }
+                ],
+                discussion: 'Can popular media (like TV shows) truly influence tourism and cultural appreciation?'
+            },
+            {
+                id: 4,
+                topic: 'Policy',
+                original: 'Congresso aprova novo marco fiscal com foco na sustentabilidade da dívida',
+                simplified: 'Congress Approves New Fiscal Framework Focused on Debt Sustainability',
+                summaryShort: 'Brazil’s Congress recently **approved** a new **fiscal** **framework** designed to control public spending and ensure long-term national **sustainability**. This is a key step for the current administration.',
+                summaryFull: 'The **framework** sets clear limits on how much the government can spend each year, tying expenditure increases to revenue growth. The goal is to restore investor **confidence** and maintain a healthy balance between social spending and reducing public debt, which is a common **concern** for rating agencies.',
+                image: 'https://placehold.co/400x200/96b0a2/fefae0?text=Fiscal+Policy',
+                vocab: [
+                    { term: 'Approves', pos: 'Verb', definition: 'To officially agree to or sanction.', portuguese: 'Aprovar' },
+                    { term: 'Fiscal', pos: 'Adjective', definition: 'Relating to government revenue, especially taxes.', portuguese: 'Fiscal' },
+                    { term: 'Framework', pos: 'Noun', definition: 'A basic structure underlying a system, concept, or text.', portuguese: 'Estrutura, marco' },
+                    { term: 'Sustainability', pos: 'Noun', definition: 'The ability to be maintained at a certain rate or level.', portuguese: 'Sustentabilidade' }
+                ],
+                discussion: 'Why is it difficult for a large country to balance social spending with debt control?'
+            },
+            // --- EXISTING HEADLINES ---
+            {
+                id: 5,
+                topic: 'Conflict',
+                original: 'Negociações se intensificam por cessar-fogo humanitário em Gaza',
+                simplified: 'Negotiations Intensify for Humanitarian Ceasefire in Gaza',
+                summaryShort: 'Global powers have stepped up efforts to mediate a deal, with talks focused on a temporary **ceasefire** to allow **humanitarian** aid into the region.',
+                summaryFull: 'Diplomatic **negotiations** have begun to **intensify** this week in a neutral European capital. The primary goal is securing a pause in fighting to address the severe humanitarian crisis, emphasizing the need for supplies, medical access, and safe zones for civilians.',
+                image: 'https://placehold.co/400x200/ba181b/f8d7da?text=Conflict+Talks',
+                vocab: [
+                    { term: 'Intensify', pos: 'Verb', definition: 'To become or make more intense, strong, or serious.', portuguese: 'Intensificar' },
+                    { term: 'Ceasefire', pos: 'Noun', definition: 'A temporary suspension of fighting, especially one during which peace talks take place.', portuguese: 'Cessar-fogo' },
+                    { term: 'Humanitarian', pos: 'Adjective', definition: 'Seeking to promote human welfare, often related to aid in a crisis.', portuguese: 'Humanitário' },
+                    { term: 'Negotiations', pos: 'Noun', definition: 'Discussion aimed at reaching an agreement.', portuguese: 'Negociações' }
+                ],
+                discussion: 'What role can neutral countries play in mediating deep international conflicts?'
+            },
+            {
+                id: 6,
+                topic: 'Policy/US',
+                original: 'Presidente Trump faz visita surpresa a estado chave de manufatura',
+                simplified: 'President Trump Makes Surprise Visit to Key Manufacturing State',
+                summaryShort: 'President Trump conducted a **surprise** visit to Ohio, a key **manufacturing** state, where he held an unannounced **rally** and **endorsed** a local candidate.',
+                summaryFull: 'The President used the visit to promote his economic agenda, focusing on job creation and trade policy. He spoke at a large rally where he endorsed a candidate for the upcoming midterms, solidifying his political support in the region.',
+                image: 'https://placehold.co/400x200/004d40/e0f2f1?text=Political+Rally',
+                vocab: [
+                    { term: 'Surprise', pos: 'Adjective', definition: 'Unexpected or causing astonishment.', portuguese: 'Surpresa' },
+                    { term: 'Manufacturing', pos: 'Noun', definition: 'The making of goods on a large scale using machinery.', portuguese: 'Manufatura' },
+                    { term: 'Rally', pos: 'Noun', definition: 'A mass meeting of people making a political protest or showing support for a cause.', portuguese: 'Comício' },
+                    { term: 'Endorses', pos: 'Verb', definition: 'To declare one\'s public approval or support of.', portuguese: 'Apoiar, endossar' }
+                ],
+                discussion: 'How important are unannounced visits and public rallies in modern political campaigning?'
+            },
+            {
+                id: 7,
+                topic: 'Policy',
+                original: 'Ministra da Governança Digital tira licença maternidade; Política de IA em espera',
+                simplified: 'Minister of Digital Governance Takes Maternity Leave; AI Policy on Hold',
+                summaryShort: 'Albania’s Minister of Digital **Governance**, known for her work on AI policy, has begun **maternity** leave. Her **portfolio** will temporarily be handled by a **successor**.',
+                summaryFull: 'The minister’s absence means that several key legislative initiatives, including a bill regulating algorithmic transparency, will be placed on hold until her return. A temporary successor has been appointed to ensure the continuation of daily ministerial functions.',
+                image: 'https://placehold.co/400x200/312e81/eef2ff?text=Digital+Governance',
+                vocab: [
+                    { term: 'Governance', pos: 'Noun', definition: 'The action or manner of governing a state, organization, or policy field.', portuguese: 'Governança' },
+                    { term: 'Maternity', pos: 'Adjective', definition: 'Relating to motherhood or the period before and after childbirth.', portuguese: 'Maternidade' },
+                    { term: 'Portfolio', pos: 'Noun', definition: 'A range of investments, or the responsibilities and duties of a government minister.', portuguese: 'Portfólio, pasta' },
+                    { term: 'Successor', pos: 'Noun', definition: 'A person or thing that succeeds another.', portuguese: 'Sucessor' }
+                ],
+                discussion: 'What are the challenges for a government when key policy initiatives are paused due to personal leave?'
+            },
+            {
+                id: 8,
+                topic: 'Policy/Economy',
+                original: 'Especialista em Ética de IA Tilly Norwood pede padrões regulatórios globais',
+                simplified: 'AI Ethicist Tilly Norwood Calls for Global Regulatory Standards',
+                summaryShort: 'Prominent AI **ethicist** Tilly Norwood argues that the rapid development of generative AI requires international **regulatory** **standards** to ensure **transparency** and public trust.',
+                summaryFull: 'In a new white paper, Norwood highlights the dangers of unchecked AI development, specifically pointing to issues of bias and accountability. She proposes a global framework that mandates transparency in training data and model deployment.',
+                image: 'https://placehold.co/400x200/0e7490/e0f7fa?text=AI+Ethics',
+                vocab: [
+                    { term: 'Ethicist', pos: 'Noun', definition: 'A person who studies or practices moral philosophy or ethical conduct.', portuguese: 'Especialista em ética' },
+                    { term: 'Regulatory', pos: 'Adjective', definition: 'Relating to the control of an activity or process, usually by rules.', portuguese: 'Regulatório' },
+                    { term: 'Standards', pos: 'Noun', definition: 'A required or established level of quality or attainment.', portuguese: 'Padrões, normas' },
+                    { term: 'Transparency', pos: 'Noun', definition: 'The condition of being clear and easily understood; openness.', portuguese: 'Transparência' }
+                ],
+                discussion: 'Should the development of AI be controlled by international bodies or national governments?'
+            },
+            
+            <!-- --- NEW HEADLINE ADDED FOR OCTOBER 29TH RIO VIOLENCE --- -->
+            {
+                id: 9,
+                topic: 'Conflict',
+                original: 'Megaoperação policial no Complexo da Maré visa prender líderes de facções',
+                simplified: 'Mega Police Operation in Maré Complex Aims to Detain Faction Leaders',
+                summaryShort: 'A large-scale police **operation** was launched in the Complexo da Maré favela today, targeting organized crime **factions**. The area saw **heavy** security **presence** and clashes.',
+                summaryFull: 'The operation, which started at dawn, involved hundreds of police officers and armored vehicles. Its primary goal is to **detain** key figures in drug trafficking and dismantle their **infrastructure**. Residents reported intense shootouts and significant disruptions to daily life, highlighting the persistent security challenges facing the city.',
+                image: 'https://placehold.co/400x200/4a4e69/ddddf2?text=Rio+Security+Operation',
+                vocab: [
+                    { term: 'Operation', pos: 'Noun', definition: 'A practical process or action carried out to achieve a specific end.', portuguese: 'Operação' },
+                    { term: 'Factions', pos: 'Noun', definition: 'A small, organized, dissenting group within a larger one, often related to criminal organizations.', portuguese: 'Facções' },
+                    { term: 'Heavy', pos: 'Adjective', definition: 'Of considerable intensity or density; difficult to deal with.', portuguese: 'Pesada, Intensa' },
+                    { term: 'Presence', pos: 'Noun', definition: 'The fact or state of being in a particular place.', portuguese: 'Presença' }
+                ],
+                discussion: 'How do frequent police operations affect the daily lives and economy of residents in affected areas?'
+            }
+        ];
+
+        const FILL_IN_BLANKS_DATA = [
+            { sentence: "The new report _______ a major shift in public opinion.", answer: "Unveils" },
+            { sentence: "They have an extremely _______ goal to finish the entire project in one month.", answer: "Ambitious" },
+            { sentence: "The government announced several new housing _______ for low-income families.", answer: "Initiatives" },
+            { sentence: "The central bank _______ its key lending rate after a long review.", answer: "Holds" },
+            { sentence: "The market remained relatively _______ despite the volatile news.", answer: "Steady" },
+            { sentence: "The small town was quiet _______ the ongoing political protests in the capital.", answer: "Amidst" },
+            { sentence: "The board raised serious _______ about the proposal's cost.", answer: "Concerns" },
+            { sentence: "Winning the award often _______ a surge in album sales.", answer: "Spurs" },
+            { sentence: "The company celebrated the successful _______ of its new mobile application.", answer: "Launch" },
+            { sentence: "The minister oversees all matters related to the nation's _______ policy.", answer: "Fiscal" },
+            { sentence: "Talks to end the conflict will **_______** in the coming days.", answer: "Intensify" },
+            { sentence: "The unexpected **_______** visit caused a high security alert.", answer: "Surprise" },
+            { sentence: "The firm's technological **_______** includes managing data security and infrastructure.", answer: "Portfolio" },
+            { sentence: "The new law aims to set high data privacy **_______**.", answer: "Standards" },
+            { sentence: "The temporary **_______** will manage the ministry until the minister returns.", answer: "Successor" },
+            { sentence: "The prominent AI **_______** gave a lecture on accountability.", answer: "Ethicist" },
+            <!-- NEW QUIZ ITEMS -->
+            { sentence: "The rescue _______ was immediately launched after the accident.", answer: "Operation" },
+            { sentence: "The morning news reported _______ rainfall and flooding across the region.", answer: "Heavy" },
+        ];
+        
+        const DRAG_AND_DROP_DATA = [
+            { id: 1, sentence: "The Minister of Digital **Governance** took **maternity** leave.", blanks: ["Governance", "maternity"] },
+            { id: 2, sentence: "He visited the **manufacturing** state for a political **rally**.", blanks: ["Manufacturing", "Rally"] },
+            { id: 3, sentence: "The new **fiscal** **framework** limits public debt.", blanks: ["Fiscal", "Framework"] },
+            { id: 4, sentence: "We seek **transparency** and **acclaim** for our work.", blanks: ["Transparency", "Acclaim"] },
+            { id: 5, sentence: "The goal is a **ceasefire** and **humanitarian** aid.", blanks: ["Ceasefire", "Humanitarian"] }
+        ];
+
+        // Consolidated Vocabulary List for Chart and Table
+        const VOCAB_TERMS = NEWS_DATA.flatMap(item => item.vocab);
+
+        // --- Global State & Initialization ---
+        let currentView = 'dashboard';
+        let quizScore = { correct: 0, total: 0 };
+        let fillInBlanksState = {};
+        let dragDropState = { drops: {}, words: [] };
+        let vocabChartInstance = null;
+
+        // --- Helper Functions ---
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(modalId + 'Content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('opacity-0', 'scale-95');
+                content.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(modalId + 'Content');
+            content.classList.remove('opacity-100', 'scale-100');
+            content.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        function updateStats(lastCorrect = 0, lastTotal = 0) {
+            quizScore.correct += lastCorrect;
+            quizScore.total += lastTotal;
+            document.getElementById('stat-score').textContent = `${quizScore.correct} / ${quizScore.total}`;
+        }
+
+        // Global function to display result message (replaces alert)
+        function showQuizMessage(quizId, message, hide = false) {
+            let resultDiv = document.getElementById(`${quizId}-message`);
+            if (!resultDiv) {
+                resultDiv = document.createElement('div');
+                resultDiv.id = `${quizId}-message`;
+                resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300';
+                document.getElementById(quizId).appendChild(resultDiv);
+            }
+
+            if (hide || !message) {
+                resultDiv.textContent = '';
+                resultDiv.classList.add('hidden');
+            } else {
+                resultDiv.textContent = message;
+                resultDiv.classList.remove('hidden');
+                // Dynamic styling based on success/failure
+                const scoreMatch = message.match(/(\d+)\s+out\s+of\s+(\d+)/);
+                const isPerfect = scoreMatch && scoreMatch[1] !== '0' && scoreMatch[1] === scoreMatch[2];
+                const isNonZero = scoreMatch && scoreMatch[1] !== '0';
+
+                if (isPerfect) {
+                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-green-100 text-green-800';
+                } else if (isNonZero) {
+                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-yellow-100 text-yellow-800';
+                } else {
+                     resultDiv.className = 'mt-4 p-3 rounded-lg text-center font-bold transition-all duration-300 bg-red-100 text-red-800';
+                }
+            }
+        }
+
+        // --- View & Navigation Logic ---
+        function changeView(viewId, filter = 'All') {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${viewId}-view`).classList.remove('hidden');
+            currentView = viewId;
+
+            // Update Header
+            const titles = {
+                'dashboard': { main: 'Learner Dashboard', sub: 'Weekly Digest Overview and Quick Access' },
+                'headlines': { main: 'Headlines Explorer', sub: 'Filter and read the latest synthesized news items' },
+                'vocab': { main: 'Vocabulary Hub', sub: 'Visualize and study new terms' },
+                'quizzes': { main: 'Practice Quizzes', sub: 'Test your knowledge on new vocabulary' }
+            };
+
+            document.getElementById('main-title').textContent = titles[viewId].main;
+            document.getElementById('sub-title').textContent = titles[viewId].sub;
+
+            // Update Nav Buttons
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active-nav-button');
+            });
+            document.querySelector(`[onclick="changeView('${viewId}')"]`).classList.add('active-nav-button');
+
+            // Specific View Logic
+            if (viewId === 'headlines') {
+                // If filter is 'featured', default to Conflict to show the ceasefire story which was featured
+                filterHeadlines(filter === 'featured' ? 'Conflict' : filter);
+            } else if (viewId === 'vocab') {
+                renderVocab();
+            } else if (viewId === 'quizzes') {
+                initQuizzes();
+                // Scroll to specific quiz if requested
+                const quizElement = document.getElementById(filter === 'fill-in' ? 'fill-in-blanks' : (filter === 'drag-drop' ? 'drag-drop' : null));
+                if (quizElement) {
+                     quizElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+        
+        // --- Headlines Logic ---
+
+        function filterHeadlines(topic) {
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active-filter-button');
+                if (btn.textContent.includes(topic) || btn.textContent.toLowerCase().includes(topic.toLowerCase())) {
+                    btn.classList.add('active-filter-button');
+                }
+            });
+
+            const filtered = topic === 'All'
+                ? NEWS_DATA
+                : NEWS_DATA.filter(item => item.topic === topic || item.topic.includes(topic));
+
+            renderHeadlines(filtered);
+        }
+
+        function toggleDetails(id) {
+            const details = document.getElementById(`details-${id}`);
+            const arrow = document.getElementById(`arrow-${id}`);
+            const button = document.querySelector(`[onclick="toggleDetails(${id})"]`);
+
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+                button.querySelector('span').textContent = 'Hide Details';
+            } else {
+                details.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+                button.querySelector('span').textContent = 'Show Details';
+            }
+        }
+
+        function renderHeadlines(headlines) {
+            const container = document.getElementById('headlines-grid');
+            container.innerHTML = headlines.map(item => `
+                <div class="bg-white rounded-xl shadow-md p-5 border-l-4 ${item.topic === 'Conflict' ? 'border-red-500' : 'border-teal-500'} hover:shadow-lg transition duration-200">
+                    <img src="${item.image}" alt="Headline visual for ${item.topic}" class="w-full h-32 object-cover rounded-lg mb-4 border border-gray-100">
+                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-stone-100 text-stone-600">${item.topic.replace('/', ' / ')}</span>
+                    <h4 class="text-xl font-bold text-stone-800 mt-2 mb-2">${item.simplified}</h4>
+                    <p class="text-sm text-stone-600 mb-4">${item.summaryShort}</p>
+                    
+                    <!-- Hidden Details Section - Toggleable -->
+                    <div id="details-${item.id}" class="hidden mt-4 pt-4 border-t border-gray-100">
+                        <p class="text-stone-700 font-medium mb-3">${item.summaryFull}</p>
+                        <div class="bg-teal-50 p-3 rounded-lg mt-3">
+                            <h5 class="font-semibold text-sm text-teal-800 mb-1">Key Vocabulary:</h5>
+                            <p class="text-xs text-stone-700">${item.vocab.map(v => `<span class="font-bold">${v.term}</span> (${v.pos})`).join(', ')}</p>
+                        </div>
+                        <div class="bg-stone-100 p-3 rounded-lg mt-3">
+                            <h5 class="font-semibold text-sm text-stone-800 mb-1">Discussion Prompt:</h5>
+                            <p class="text-xs italic text-stone-600">${item.discussion}</p>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleDetails(${item.id})" class="text-sm font-semibold text-teal-600 hover:text-teal-800 mt-3 inline-flex items-center">
+                        <span>Show Details</span>
+                        <svg id="arrow-${item.id}" class="w-4 h-4 ml-1 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+
+            // Update read stats
+            document.getElementById('stat-read').textContent = headlines.length;
+        }
+
+        // --- Vocabulary Hub Logic ---
+
+        function renderVocab() {
+            // 1. Prepare Chart Data (POS Frequency)
+            const posCounts = VOCAB_TERMS.reduce((acc, term) => {
+                const pos = term.pos;
+                acc[pos] = (acc[pos] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(posCounts);
+            const data = Object.values(posCounts);
+
+            const chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Words by Part of Speech',
+                        data: data,
+                        backgroundColor: ['#0d9488', '#0ea5e9', '#94a3b8', '#14b8a6', '#0369a1', '#2dd4bf', '#38bdf8'], // Teal/Sky Palette
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Count' },
+                            ticks: { precision: 0 }
+                        },
+                        x: {
+                            title: { display: true, text: 'Part of Speech' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Vocabulary Part of Speech Frequency' }
+                    }
+                }
+            };
+
+            // Destroy existing chart if it exists
+            if (vocabChartInstance) {
+                vocabChartInstance.destroy();
+            }
+            
+            // Render Chart
+            const ctx = document.getElementById('vocabChart').getContext('2d');
+            vocabChartInstance = new Chart(ctx, chartConfig);
+
+
+            // 2. Render Vocabulary Table
+            const tableBody = document.getElementById('vocab-table-body');
+            // Sort alphabetically for easier study
+            const sortedVocab = [...VOCAB_TERMS].sort((a, b) => a.term.localeCompare(b.term));
+
+            tableBody.innerHTML = sortedVocab.map(v => `
+                <tr class="hover:bg-gray-50 transition duration-100">
+                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-stone-900">${v.term}</td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-sky-600 font-semibold">${v.pos}</td>
+                    <td class="px-3 py-2 text-sm text-stone-600">${v.definition} <span class="text-xs text-stone-400 italic">(${v.portuguese})</span></td>
+                </tr>
+            `).join('');
+
+            // Update stats for vocab count
+            document.getElementById('stat-vocab').textContent = VOCAB_TERMS.length;
+        }
+
+        // --- Quiz Logic ---
+
+        function initQuizzes() {
+            showQuizMessage('fill-in-blanks', '', true);
+            showQuizMessage('drag-drop', '', true);
+
+            // 1. Initialize Fill-in-the-Blanks
+            const fillInContainer = document.getElementById('fill-in-sentences');
+            fillInContainer.innerHTML = FILL_IN_BLANKS_DATA.map((item, index) => {
+                fillInBlanksState[index] = '';
+                return `<p data-id="${index}" class="text-base text-stone-700">
+                    ${index + 1}. ${item.sentence.replace('_______', `<input type="text" data-index="${index}" oninput="updateFillInState(this)" class="w-28 md:w-36 p-1 border border-gray-300 rounded-md focus:border-teal-500 focus:ring-teal-500 transition duration-150">`)}
+                    <span id="fill-in-result-${index}" class="text-sm font-semibold ml-2"></span>
+                </p>`;
+            }).join('');
+
+            // 2. Initialize Drag & Drop
+            const dragDropContainer = document.getElementById('drag-drop-sentences');
+            const draggableWordsContainer = document.getElementById('draggable-words');
+
+            // Reset state
+            dragDropState.drops = {};
+            dragDropState.words = DRAG_AND_DROP_DATA.flatMap(item => item.blanks);
+
+            // Shuffle and render draggable words
+            const shuffledWords = dragDropState.words.sort(() => Math.random() - 0.5);
+            draggableWordsContainer.innerHTML = shuffledWords.map(word => `
+                <div id="drag-${word}" data-word="${word}" draggable="true" ondragstart="handleDragStart(event)" 
+                     class="draggable bg-sky-200 text-sky-900 px-3 py-1 rounded-full text-sm font-semibold shadow-sm hover:bg-sky-300 transition duration-150 cursor-pointer">
+                    ${word}
+                </div>
+            `).join('');
+
+            // Render sentences with drop zones
+            dragDropContainer.innerHTML = DRAG_AND_DROP_DATA.map(item => {
+                let sentenceHtml = `<p class="text-base text-stone-700">`;
+                let count = 0;
+                // Replace **word** with a drop zone
+                const processedSentence = item.sentence.split('**').map((part, i) => {
+                    if (i % 2 !== 0) {
+                        // This is the blank/placeholder (which is the correct word)
+                        const correctWord = part.trim().toLowerCase();
+                        const dropId = `${item.id}-${count++}`;
+                        dragDropState.drops[dropId] = { correct: correctWord, current: null };
+                        return `<span id="drop-${dropId}" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" 
+                                      class="dropping-area bg-gray-100 hover:bg-gray-200 transition duration-150 rounded-md p-1 border-gray-400 inline-flex items-center justify-center">
+                                      <span class="text-xs text-gray-500">Drop Here</span>
+                                </span>`;
+                    }
+                    return part;
+                }).join('');
+                sentenceHtml += `${item.id}. ${processedSentence}`;
+                sentenceHtml += `<span id="drag-drop-result-${item.id}" class="text-sm font-semibold ml-2"></span></p>`;
+                return sentenceHtml;
+            }).join('');
+        }
+
+        function updateFillInState(input) {
+            const index = input.getAttribute('data-index');
+            fillInBlanksState[index] = input.value;
+        }
+
+        function checkFillInBlanks() {
+            let correctCount = 0;
+            const totalCount = FILL_IN_BLANKS_DATA.length;
+
+            FILL_IN_BLANKS_DATA.forEach((item, index) => {
+                const userAnswer = (fillInBlanksState[index] || '').trim().toLowerCase();
+                const correctAnswer = item.answer.toLowerCase();
+                const resultSpan = document.getElementById(`fill-in-result-${index}`);
+                const inputField = document.querySelector(`input[data-index="${index}"]`);
+
+                if (userAnswer === correctAnswer) {
+                    correctCount++;
+                    resultSpan.textContent = '✅ Correct!';
+                    resultSpan.className = 'text-sm font-semibold ml-2 text-green-600';
+                    inputField.classList.add('border-green-500', 'bg-green-50');
+                    inputField.classList.remove('border-red-500', 'bg-red-50');
+                } else {
+                    resultSpan.textContent = `❌ Incorrect. Answer: ${item.answer}`;
+                    resultSpan.className = 'text-sm font-semibold ml-2 text-red-600';
+                    inputField.classList.add('border-red-500', 'bg-red-50');
+                    inputField.classList.remove('border-green-500', 'bg-green-50');
+                }
+                inputField.disabled = true;
+            });
+
+            updateStats(correctCount, totalCount);
+            // Display result message
+            showQuizMessage('fill-in-blanks', `Fill-in-the-Blanks Result: ${correctCount} out of ${totalCount} correct!`);
+        }
+
+        function resetFillInBlanks() {
+            initQuizzes(); // Re-initializes the quiz and resets state
+            showQuizMessage('fill-in-blanks', '', true);
+        }
+
+        function handleDragStart(event) {
+            // Set the data transfer to carry the ID of the dragged element (the word)
+            event.dataTransfer.setData('text/plain', event.target.id);
+            event.target.classList.add('opacity-50');
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault(); // Necessary to allow dropping
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const draggedId = event.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(draggedId);
+            const dropTarget = event.currentTarget;
+            const dropId = dropTarget.id.replace('drop-', '');
+            const word = draggedElement.getAttribute('data-word');
+
+            // Find the currently displayed word in the drop target, if any
+            const existingDisplayClone = dropTarget.querySelector('.bg-sky-500');
+
+            if (existingDisplayClone) {
+                // Find the original element in the pool
+                const existingWord = document.getElementById(`drag-${existingDisplayClone.textContent}`);
+                if (existingWord) {
+                     // Move the old word back to the pool
+                    document.getElementById('draggable-words').appendChild(existingWord);
+                    existingWord.classList.remove('hidden', 'opacity-50');
+                }
+            }
+
+            // Place the new word in the drop target
+            draggedElement.classList.remove('opacity-50');
+            draggedElement.classList.add('hidden'); // Hide from the pool
+
+            // Create a clone to display in the drop area
+            const displayClone = draggedElement.cloneNode(true);
+            displayClone.id = ''; // Remove ID to prevent duplication
+            displayClone.draggable = false;
+            displayClone.classList.remove('hidden', 'draggable', 'bg-sky-200', 'text-sky-900', 'hover:bg-sky-300', 'shadow-sm', 'cursor-pointer');
+            displayClone.classList.add('bg-sky-500', 'text-white', 'shadow-md', 'cursor-default', 'inline-flex', 'items-center', 'justify-center', 'px-3', 'py-1');
+            displayClone.textContent = word;
+
+            // Clear and append the clone
+            dropTarget.innerHTML = '';
+            dropTarget.appendChild(displayClone);
+            
+            dropTarget.classList.remove('border-gray-400', 'bg-gray-100', 'hover:bg-gray-200'); // Remove initial border style
+
+            // Update state
+            dragDropState.drops[dropId].current = word.toLowerCase();
+        }
+
+        function checkDragAndDrop() {
+            let correctCount = 0;
+            let totalCount = 0;
+            
+            // Disable dragging of all words
+            document.querySelectorAll('.draggable').forEach(word => word.draggable = false);
+
+            for (const dropId in dragDropState.drops) {
+                totalCount++;
+                const drop = dragDropState.drops[dropId];
+                const dropTarget = document.getElementById(`drop-${dropId}`);
+                
+                // Final check for the word placed in the UI
+                const placedWordElement = dropTarget.querySelector('.bg-sky-500');
+                let placedWord = placedWordElement ? placedWordElement.textContent.toLowerCase() : null;
+
+                if (placedWord === drop.correct) {
+                    correctCount++;
+                    dropTarget.classList.add('border-green-500', 'bg-green-100');
+                    dropTarget.classList.remove('border-red-500', 'border-gray-400', 'bg-gray-100');
+                } else {
+                    // Highlight incorrect drop zone
+                    dropTarget.classList.add('border-red-500', 'bg-red-100');
+                    dropTarget.classList.remove('border-green-500', 'border-gray-400', 'bg-gray-100');
+
+                    // If incorrect, show the correct answer temporarily on the drop zone
+                    if (placedWordElement) {
+                        placedWordElement.textContent += ` ❌ (${drop.correct})`;
+                        placedWordElement.classList.add('bg-red-500');
+                        placedWordElement.classList.remove('bg-sky-500');
+                    } else {
+                        // If nothing dropped, show the correct answer
+                        dropTarget.innerHTML = `<span class="text-red-700">❌ Missing (${drop.correct})</span>`;
+                    }
+                }
+                
+                // Disable dropping after checking
+                dropTarget.ondrop = null;
+                dropTarget.ondragover = null;
+            }
+
+            updateStats(correctCount, totalCount);
+            // Display result message
+            showQuizMessage('drag-drop', `Drag-and-Drop Result: ${correctCount} out of ${totalCount} blanks correct!`);
+        }
+
+        function resetDragAndDrop() {
+            initQuizzes();
+            showQuizMessage('drag-drop', '', true);
+        }
+        
+        // --- Document Ready Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial setup - starts on the Dashboard view
+            changeView('dashboard');
+            // Initial vocabulary stat update (before rendering the chart/table)
+            document.getElementById('stat-vocab').textContent = VOCAB_TERMS.length;
+        });
+    </script>
+</body>
+</html>
